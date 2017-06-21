@@ -16,13 +16,14 @@
     ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
  '(package-selected-packages
    (quote
-    (stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
+    (magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(mode-line ((t (:foreground "#f0f0f0" :background "#666666" :box nil))))
+ '(mode-line-inactive ((t (:foreground "#999999" :background "#666666" :box nil)))))
 
 ;; use-package
 (unless (package-installed-p 'use-package)
@@ -39,17 +40,6 @@
   :ensure t
   :config
   (evil-mode 1))
-
-;; neotree
-(use-package neotree
-  :ensure t
-  :config)
-(global-set-key [f8] 'neotree-toggle)
-(evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
-(evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
-(evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
-(evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
-(evil-define-key 'normal neotree-mode-map (kbd "o") 'neotree-enter)
 
 ;; webmode
 (use-package web-mode
@@ -153,8 +143,41 @@
   (use-package powerline-evil
     :ensure t
     :config
-    (powerline-center-theme)
+    (powerline-nano-theme)
     ))
+
+;; helm
+(use-package helm
+  :ensure t
+  :config
+  (helm-mode 1)
+  (global-set-key (kbd "M-x") 'helm-M-x)
+  (global-set-key (kbd "C-x C-f") 'helm-find-files)
+  (global-set-key (kbd "C-c h g") 'helm-google-suggest))
+
+;; restart emacs
+(use-package restart-emacs
+  :ensure t
+  :config)
+
+;; magit
+(use-package magit
+  :ensure t
+  :config)
+
+;; molokai theme
+(use-package molokai-theme 
+  :ensure t
+  :load-path "themes"
+  :init
+  (setq molokai-theme-kit t)
+  :config
+  (load-theme 'molokai t)
+  )
+
+;; linum
+(global-linum-mode t)
+(setq linum-format "%d ")
 
 (provide '.emacs)
 ;;; .emacs ends here
