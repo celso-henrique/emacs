@@ -1,3 +1,4 @@
+;;; Celso Henrique .emacs file
 ;;; package --- Summary
 
 (require 'package)
@@ -24,6 +25,9 @@
  ;; If there is more than one, they won't work right.
  '(mode-line ((t (:foreground "#f0f0f0" :background "#666666" :box nil))))
  '(mode-line-inactive ((t (:foreground "#999999" :background "#666666" :box nil)))))
+
+;; backup directory
+(setq backup-directory-alist '(("." . "~/.emacs-saves")))
 
 ;; use-package
 (unless (package-installed-p 'use-package)
