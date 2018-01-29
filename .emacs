@@ -49,6 +49,7 @@
 (eval-when-compile
 (require 'use-package))
 (require 'diminish)
+(require 'bind-key)
 
 ;; evil mode
 (use-package evil
@@ -123,7 +124,7 @@
 ;; disable jshint since we prefer eslint checking
 (setq-default flycheck-disabled-checkers
   (append flycheck-disabled-checkers
-	  '(javascript-jshint)))
+  '(javascript-jshint)))
 
 ;; disable check for html files
 (setq-default flycheck-disabled-checkers '(html-tidy))
@@ -193,6 +194,11 @@
   (global-set-key (kbd "M-x") 'helm-M-x)
   (global-set-key (kbd "C-x C-f") 'helm-find-files)
   (global-set-key (kbd "C-c h g") 'helm-google-suggest))
+
+;; escape quits
+(bind-key "<escape>" 'isearch-cancel isearch-mode-map)
+(bind-key "<escape>" 'helm-keyboard-quit helm-map)
+(bind-key "<escape>" 'helm-keyboard-quit helm-comp-read-map)
 
 ;; restart emacs
 (use-package restart-emacs
