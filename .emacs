@@ -5,6 +5,11 @@
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
+(when (>= emacs-major-version 24)
+  (require 'package)
+  (package-initialize)
+  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+  )
 (setq package-enable-at-startup nil)
 (package-initialize)
 (custom-set-variables
@@ -15,9 +20,10 @@
  '(custom-safe-themes
    (quote
     ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
+ '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
    (quote
-    (magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
+    (flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -27,17 +33,22 @@
  '(mode-line-inactive ((t (:foreground "#999999" :background "#666666" :box nil)))))
 
 ;; backup directory
-(setq backup-directory-alist '(("." . "~/.emacs-saves")))
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
 
 ;; use-package
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package diminish
+  :ensure t)
+
 (eval-when-compile
-  (require 'use-package))
+(require 'use-package))
 (require 'diminish)
-(require 'bind-key)
 
 ;; evil mode
 (use-package evil
@@ -73,16 +84,41 @@
   (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize)))
 
-;; js2 - optmize js editing
+;; js2
 (use-package js2-mode
   :ensure t
   :config)
+(setq js2-strict-missing-semi-warning nil)
+
+;; prettier
+(use-package prettier-js
+  :ensure t
+  :config
+  (setq prettier-js-args '(
+    "--trailing-comma" "none"
+    "--bracket-spacing" "false"
+    "--single-quote"
+  ))
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode))
+
+;; rjsx-mode - optmize jsx editing
+(use-package rjsx-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+  (define-key rjsx-mode-map (kbd "C-d") nil)
+  (define-key rjsx-mode-map "<" nil))
 
 ;; flycheck
 (use-package flycheck
   :ensure t
   :config
   (global-flycheck-mode))
+
+(use-package flycheck-flow
+  :ensure t
+  :config)
 
 ;; disable jshint since we prefer eslint checking
 (setq-default flycheck-disabled-checkers
@@ -93,7 +129,7 @@
 (setq-default flycheck-disabled-checkers '(html-tidy))
 
 ;; use eslint with web-mode for jsx files
-(flycheck-add-mode 'javascript-eslint 'web-mode)
+(flycheck-add-mode 'javascript-eslint 'rjsx-mode)
 
 ;; customize flycheck temp file prefix
 (setq-default flycheck-temp-prefix ".flycheck")
@@ -125,8 +161,7 @@
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 
 ;; json-mode
-(use-package json-mode
-  :ensure t
+(use-package json-mode :ensure t
   :config)
 
 ;; stylus-mode
