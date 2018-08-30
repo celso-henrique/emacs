@@ -2,6 +2,7 @@
 ;;; package --- Summary
 
 (require 'package)
+(add-to-list 'load-path "~/Projects/typescript.el/")
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
@@ -23,7 +24,7 @@
  '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
    (quote
-    (flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
+    (typescript-mode flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -50,6 +51,9 @@
 (require 'use-package))
 (require 'diminish)
 (require 'bind-key)
+
+;; Typescript
+(load "typescript-mode")
 
 ;; evil mode
 (use-package evil
@@ -117,10 +121,6 @@
   :config
   (global-flycheck-mode))
 
-(use-package flycheck-flow
-  :ensure t
-  :config)
-
 ;; disable jshint since we prefer eslint checking
 (setq-default flycheck-disabled-checkers
   (append flycheck-disabled-checkers
@@ -167,6 +167,11 @@
 
 ;; stylus-mode
 (use-package stylus-mode 
+  :ensure t
+  :config)
+
+;; less-mode
+(use-package less-css-mode 
   :ensure t
   :config)
 
@@ -223,6 +228,8 @@
 ;; linum
 (global-linum-mode t)
 (setq linum-format "%d ")
+
+(load-file "~/.emacs.d/flow-for-emacs/flow.el")
 
 (provide '.emacs)
 ;;; .emacs ends here
