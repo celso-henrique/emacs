@@ -2,29 +2,24 @@
 ;;; package --- Summary
 
 (require 'package)
-(add-to-list 'load-path "~/Projects/typescript.el/")
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
 (when (>= emacs-major-version 24)
   (require 'package)
-  (package-initialize)
   (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
   )
 (setq package-enable-at-startup nil)
-(package-initialize)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   (quote
-    ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
+   '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default))
  '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
-   (quote
-    (typescript-mode flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
+   '(flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -51,9 +46,6 @@
 (require 'use-package))
 (require 'diminish)
 (require 'bind-key)
-
-;; Typescript
-(load "typescript-mode")
 
 ;; evil mode
 (use-package evil
@@ -101,8 +93,9 @@
   :config
   (setq prettier-js-args '(
     "--trailing-comma" "none"
-    "--bracket-spacing" "false"
+    "--bracket-spacing" "true"
     "--single-quote"
+    "--no-semi"
   ))
   (add-hook 'js2-mode-hook 'prettier-js-mode)
   (add-hook 'web-mode-hook 'prettier-js-mode))
@@ -188,7 +181,7 @@
   (use-package powerline-evil
     :ensure t
     :config
-    (powerline-nano-theme)
+    (powerline-default-theme)
     ))
 
 ;; helm
@@ -222,14 +215,11 @@
   :init
   (setq molokai-theme-kit t)
   :config
-  (load-theme 'molokai t)
-  )
+  (load-theme 'molokai t))
 
 ;; linum
 (global-linum-mode t)
-(setq linum-format "%d ")
-
-(load-file "~/.emacs.d/flow-for-emacs/flow.el")
+(setq linum-format "%d")
 
 (provide '.emacs)
 ;;; .emacs ends here
