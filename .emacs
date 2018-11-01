@@ -163,6 +163,16 @@
   :ensure t
   :config)
 
+;; yaml-mode
+(use-package yaml-mode 
+  :ensure t
+  :config)
+
+;; dockerfile-mode
+(use-package dockerfile-mode 
+  :ensure t
+  :config)
+
 ;; less-mode
 (use-package less-css-mode 
   :ensure t
