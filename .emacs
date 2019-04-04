@@ -2,7 +2,9 @@
 ;;; package --- Summary
 
 (require 'package)
+;; Initialise packages
 (package-initialize)
+
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
@@ -17,10 +19,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default))
+   (quote
+    ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
  '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
-   '(flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode)))
+   (quote
+    (flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -234,3 +238,4 @@
 
 (provide '.emacs)
 ;;; .emacs ends here
+(put 'downcase-region 'disabled nil)
