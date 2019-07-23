@@ -98,6 +98,7 @@
     "--trailing-comma" "none"
     "--bracket-spacing" "true"
     "--single-quote"
+    "--no-semi"
   ))
   (add-hook 'js2-mode-hook 'prettier-js-mode)
   (add-hook 'web-mode-hook 'prettier-js-mode))
