@@ -207,6 +207,8 @@
   (global-set-key (kbd "C-x C-f") 'helm-find-files)
   (global-set-key (kbd "C-c h g") 'helm-google-suggest))
 
+(customize-set-variable 'helm-ff-lynx-style-map t)
+
 ;; escape quits
 (bind-key "<escape>" 'isearch-cancel isearch-mode-map)
 (bind-key "<escape>" 'helm-keyboard-quit helm-map)
