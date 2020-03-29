@@ -20,9 +20,10 @@
    (quote
     ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
  '(flycheck-javascript-flow-args nil)
+ '(helm-ff-lynx-style-map t)
  '(package-selected-packages
    (quote
-    (markdown-mode flycheck-flow flow-minor-mode prettier-js magit restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode neotree evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode))))
+    (auto-package-update markdown-mode flycheck-flow flow-minor-mode prettier-js restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode neotree))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -68,6 +69,7 @@
 (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.js$" . web-mode))
 
 ;; for better jsx syntax-highlighting in web-mode
 ;; - courtesy of Patrick @halbtuerke
@@ -98,18 +100,8 @@
     "--trailing-comma" "none"
     "--bracket-spacing" "true"
     "--single-quote"
-    "--no-semi"
   ))
-  (add-hook 'js2-mode-hook 'prettier-js-mode)
   (add-hook 'web-mode-hook 'prettier-js-mode))
-
-;; rjsx-mode - optmize jsx editing
-(use-package rjsx-mode
-  :ensure t
-  :config
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
-  (define-key rjsx-mode-map (kbd "C-d") nil)
-  (define-key rjsx-mode-map "<" nil))
 
 ;; flycheck
 (use-package flycheck
@@ -127,6 +119,7 @@
 
 ;; use eslint with web-mode for jsx files
 (flycheck-add-mode 'javascript-eslint 'rjsx-mode)
+(flycheck-add-mode 'javascript-eslint 'web-mode)
 
 ;; customize flycheck temp file prefix
 (setq-default flycheck-temp-prefix ".flycheck")
@@ -219,11 +212,6 @@
   :ensure t
   :config)
 
-;; magit
-(use-package magit
-  :ensure t
-  :config)
-
 ;; vue
 (use-package vue-mode
   :ensure t
@@ -250,6 +238,14 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
+
+;; autoupdate
+(use-package auto-package-update
+   :ensure t
+   :config
+   (setq auto-package-update-delete-old-versions t
+         auto-package-update-interval 4)
+   (auto-package-update-maybe))
 
 
 (provide '.emacs)
