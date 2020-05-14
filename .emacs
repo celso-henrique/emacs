@@ -68,8 +68,18 @@
 (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.js$" . web-mode))
+
+;; rxjs mode
+(use-package rjsx-mode
+  :ensure t
+  :config)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+
+(defun my-web-mode-hook ()
+  "Hooks for Web mode."
+  (setq web-mode-markup-indent-offset 2)
+)
+(add-hook 'web-mode-hook  'my-web-mode-hook)
 
 ;; for better jsx syntax-highlighting in web-mode
 ;; - courtesy of Patrick @halbtuerke
@@ -101,7 +111,7 @@
     "--bracket-spacing" "true"
     "--single-quote"
   ))
-  (add-hook 'web-mode-hook 'prettier-js-mode))
+  (add-hook 'rjsx-mode-hook 'prettier-js-mode))
 
 ;; flycheck
 (use-package flycheck
@@ -173,7 +183,6 @@
 (use-package less-css-mode 
   :ensure t
   :config)
-
 
 ;; indentation
 (setq-default indent-tabs-mode nil
