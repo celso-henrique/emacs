@@ -51,6 +51,9 @@
 ;; --------------------------------------------------
 
 (use-package evil
+  :init
+  ;; Usa o undo-redo nativo do Emacs (recomendado)
+  (setq evil-undo-system 'undo-redo)
   :config
   (evil-mode 1))
 
