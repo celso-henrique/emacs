@@ -1,261 +1,176 @@
-;;; Celso Henrique .emacs file
-;;; package --- Summary
+;;; Celso Henrique .emacs
+;;; ======================
+
+;; --------------------------------------------------
+;; PACKAGE SYSTEM
+;; --------------------------------------------------
 
 (require 'package)
-(package-initialize)
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
-(when (>= emacs-major-version 24)
-  (require 'package)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-  )
 (setq package-enable-at-startup nil)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
- '(flycheck-javascript-flow-args nil)
- '(helm-ff-lynx-style-map t)
- '(package-selected-packages
-   (quote
-    (auto-package-update markdown-mode flycheck-flow flow-minor-mode prettier-js restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode neotree))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(mode-line ((t (:foreground "#f0f0f0" :background "#666666" :box nil))))
- '(mode-line-inactive ((t (:foreground "#999999" :background "#666666" :box nil)))))
 
-;; backup directory
-(setq backup-directory-alist
-      `((".*" . ,temporary-file-directory)))
-(setq auto-save-file-name-transforms
-      `((".*" ,temporary-file-directory t)))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/"))
+(package-initialize)
 
+;; --------------------------------------------------
 ;; use-package
+;; --------------------------------------------------
+
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
 
-(use-package diminish
-  :ensure t)
-
-(eval-when-compile
-(require 'use-package))
-(require 'diminish)
+(eval-when-compile (require 'use-package))
 (require 'bind-key)
 
-;; evil mode
+(setq use-package-always-ensure t)
+
+;; --------------------------------------------------
+;; macOS PATH (NODE / PRETTIER / ESLINT)
+;; --------------------------------------------------
+
+(use-package exec-path-from-shell
+  :config
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "PATH")
+    (exec-path-from-shell-copy-env "NODE_PATH")))
+
+;; --------------------------------------------------
+;; NODE_MODULES/.BIN NO PATH (FORMA CORRETA)
+;; --------------------------------------------------
+
+(use-package add-node-modules-path
+  :hook
+  ((rjsx-mode
+    typescript-mode
+    web-mode) . add-node-modules-path))
+
+;; --------------------------------------------------
+;; EVIL
+;; --------------------------------------------------
+
 (use-package evil
-  :ensure t
   :config
   (evil-mode 1))
 
-;; webmode
-(use-package web-mode
-  :ensure t
-  :config)
-(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.[agj]sp\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+;; ESC sempre cancela tudo
+(global-set-key (kbd "<escape>") 'keyboard-quit)
 
-;; rxjs mode
+;; --------------------------------------------------
+;; MODOS DE EDIÇÃO
+;; --------------------------------------------------
+
+;; JS / JSX
 (use-package rjsx-mode
-  :ensure t
-  :config)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
+  :mode ("\\.js\\'" "\\.jsx\\'"))
 
-(defun my-web-mode-hook ()
-  "Hooks for Web mode."
-  (setq web-mode-markup-indent-offset 2)
-)
-(add-hook 'web-mode-hook  'my-web-mode-hook)
-
-;; for better jsx syntax-highlighting in web-mode
-;; - courtesy of Patrick @halbtuerke
-(defadvice web-mode-highlight-part (around tweak-jsx activate)
-  (if (equal web-mode-content-type "jsx")
-    (let ((web-mode-enable-part-face nil))
-      ad-do-it)
-    ad-do-it))
-
-;; exec-path for macos
-(use-package exec-path-from-shell
-  :ensure t
+;; TypeScript (sem JSX)
+(use-package typescript-mode
+  :mode ("\\.ts\\'")
   :config
-  (when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize)))
+  (setq typescript-indent-level 2))
 
-;; js2
-(use-package js2-mode
-  :ensure t
-  :config)
-(setq js2-strict-missing-semi-warning nil)
+;; TSX → WEB-MODE (correto)
+(use-package web-mode
+  :mode ("\\.tsx\\'")
+  :config
+  (setq web-mode-content-types-alist
+        '(("jsx" . "\\.tsx\\'")))
+  (setq web-mode-markup-indent-offset 2
+        web-mode-code-indent-offset 2
+        web-mode-script-indent-offset 2
+        web-mode-css-indent-offset 2
+        indent-tabs-mode nil))
 
-;; prettier
+;; --------------------------------------------------
+;; PRETTIER (LOCAL DO PROJETO)
+;; --------------------------------------------------
+
 (use-package prettier-js
-  :ensure t
+  :diminish prettier-js-mode
   :config
-  (setq prettier-js-args '(
-    "--trailing-comma" "none"
-    "--bracket-spacing" "true"
-    "--single-quote"
-  ))
-  (add-hook 'rjsx-mode-hook 'prettier-js-mode))
+  ;; NÃO força global — usa node_modules/.bin/prettier
+  (setq prettier-js-command "prettier")
 
-;; flycheck
+  (add-hook 'rjsx-mode-hook #'prettier-js-mode)
+  (add-hook 'typescript-mode-hook #'prettier-js-mode)
+  (add-hook 'web-mode-hook #'prettier-js-mode)
+
+  ;; format on save
+  (add-hook 'prettier-js-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'prettier-js nil t))))
+
+;; --------------------------------------------------
+;; FLYCHECK + ESLINT LOCAL
+;; --------------------------------------------------
+
 (use-package flycheck
-  :ensure t
-  :config
+  :init
   (global-flycheck-mode))
 
-;; disable jshint since we prefer eslint checking
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-  '(javascript-jshint)))
-
-;; disable check for html files
-(setq-default flycheck-disabled-checkers '(html-tidy))
-
-;; use eslint with web-mode for jsx files
-(flycheck-add-mode 'javascript-eslint 'rjsx-mode)
-(flycheck-add-mode 'javascript-eslint 'web-mode)
-
-;; customize flycheck temp file prefix
-(setq-default flycheck-temp-prefix ".flycheck")
-
-;; disable json-jsonlist checking for json files
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(json-jsonlist)))
-
-;; customize flycheck temp file prefix
-(setq-default flycheck-temp-prefix ".flycheck")
-
-;; disable json-jsonlist checking for json files
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(json-jsonlist)))
-
-;; use local eslint from node_modules before global
-;; http://emacs.stackexchange.com/questions/21205/flycheck-with-file-relative-eslint-executable
 (defun my/use-eslint-from-node-modules ()
   (let* ((root (locate-dominating-file
                 (or (buffer-file-name) default-directory)
                 "node_modules"))
          (eslint (and root
-                      (expand-file-name "node_modules/eslint/bin/eslint.js"
-                                        root))))
+                      (expand-file-name
+                       "node_modules/eslint/bin/eslint.js" root))))
     (when (and eslint (file-executable-p eslint))
       (setq-local flycheck-javascript-eslint-executable eslint))))
+
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 
-;; json-mode
-(use-package json-mode :ensure t
-  :config)
+;; --------------------------------------------------
+;; DESABILITAR COISAS QUE QUEBRAM INDENTAÇÃO
+;; --------------------------------------------------
 
-;; stylus-mode
-(use-package stylus-mode 
-  :ensure t
-  :config)
-
-;; yaml-mode
-(use-package yaml-mode 
-  :ensure t
-  :config)
-
-;; dockerfile-mode
-(use-package dockerfile-mode 
-  :ensure t
-  :config)
-
-;; less-mode
-(use-package less-css-mode 
-  :ensure t
-  :config)
-
-;; indentation
-(setq-default indent-tabs-mode nil
-  tab-stop-list ()
-  tab-width 2)
-(setq-default js2-basic-offset 2)
-
-;; powerline
-(use-package powerline
-  :ensure t
+(use-package dtrt-indent
   :config
-  (use-package powerline-evil
-    :ensure t
-    :config
-    (powerline-default-theme)
-    ))
+  (add-hook 'typescript-mode-hook (lambda () (dtrt-indent-mode -1)))
+  (add-hook 'web-mode-hook (lambda () (dtrt-indent-mode -1))))
 
-;; helm
+(setq electric-indent-mode nil)
+
+;; --------------------------------------------------
+;; INDENTAÇÃO GLOBAL
+;; --------------------------------------------------
+
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
+
+(setq js-indent-level 2)
+(setq js2-basic-offset 2)
+(setq typescript-indent-level 2)
+
+;; --------------------------------------------------
+;; HELM
+;; --------------------------------------------------
+
 (use-package helm
-  :ensure t
   :config
   (helm-mode 1)
   (global-set-key (kbd "M-x") 'helm-M-x)
-  (global-set-key (kbd "C-x C-f") 'helm-find-files)
-  (global-set-key (kbd "C-c h g") 'helm-google-suggest))
+  (global-set-key (kbd "C-x C-f") 'helm-find-files))
 
-(customize-set-variable 'helm-ff-lynx-style-map t)
+;; ESC fecha Helm SEMPRE
+(with-eval-after-load 'helm
+  (define-key helm-map (kbd "<escape>") 'helm-keyboard-quit))
 
-;; escape quits
-(bind-key "<escape>" 'isearch-cancel isearch-mode-map)
-(bind-key "<escape>" 'helm-keyboard-quit helm-map)
-(bind-key "<escape>" 'helm-keyboard-quit helm-comp-read-map)
+;; --------------------------------------------------
+;; UI
+;; --------------------------------------------------
 
-;; restart emacs
-(use-package restart-emacs
-  :ensure t
-  :config)
-
-;; vue
-(use-package vue-mode
-  :ensure t
-  :config)
-
-;; molokai theme
-(use-package molokai-theme 
-  :ensure t
-  :load-path "themes"
-  :init
-  (setq molokai-theme-kit t)
+(use-package molokai-theme
   :config
   (load-theme 'molokai t))
 
-;; linum
-(global-linum-mode t)
-(setq linum-format "%d")
+(use-package restart-emacs)
 
-;; markdown-mode
-(use-package markdown-mode
-  :ensure t
-  :commands (markdown-mode gfm-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode))
-  :init (setq markdown-command "multimarkdown"))
-
-;; autoupdate
-(use-package auto-package-update
-   :ensure t
-   :config
-   (setq auto-package-update-delete-old-versions t
-         auto-package-update-interval 4)
-   (auto-package-update-maybe))
-
+;; --------------------------------------------------
+;; FINAL
+;; --------------------------------------------------
 
 (provide '.emacs)
 ;;; .emacs ends here
