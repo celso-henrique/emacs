@@ -26,17 +26,34 @@
 (setq use-package-always-ensure t)
 
 ;; --------------------------------------------------
-;; PERFORMANCE
+;; PERFORMANCE (macOS optimized)
 ;; --------------------------------------------------
 
 (setq gc-cons-threshold (* 50 1000 1000))
 (setq read-process-output-max (* 1024 1024))
 (setq inhibit-startup-screen t)
 
+(add-hook 'after-init-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 2 1000 1000))))
+
 ;; Smooth scroll
 (setq scroll-conservatively 101)
 (setq scroll-margin 8)
 (setq scroll-step 1)
+(setq fast-but-imprecise-scrolling nil)
+
+;; --------------------------------------------------
+;; FIX macOS BLACK ARTIFACTS (important)
+;; --------------------------------------------------
+
+(setq redisplay-skip-fontification-on-input nil)
+(setq inhibit-compacting-font-caches t)
+(setq auto-window-vscroll nil)
+(setq-default bidi-display-reordering nil)
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq frame-resize-pixelwise t)
+(setq window-resize-pixelwise t)
 
 ;; --------------------------------------------------
 ;; macOS PATH
@@ -93,15 +110,16 @@
   (which-key-mode 1))
 
 ;; --------------------------------------------------
-;; TREE-SITTER (highlight moderno)
+;; TREE-SITTER (safe load)
 ;; --------------------------------------------------
 
-(use-package treesit-auto
-  :config
-  (global-treesit-auto-mode))
+(when (fboundp 'treesit-available-p)
+  (use-package treesit-auto
+    :config
+    (global-treesit-auto-mode)))
 
 ;; --------------------------------------------------
-;; MODOS DE EDIÇÃO
+;; MODES
 ;; --------------------------------------------------
 
 (use-package rjsx-mode
@@ -165,16 +183,14 @@
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 
 ;; --------------------------------------------------
-;; INDENTAÇÃO
+;; INDENTATION
 ;; --------------------------------------------------
 
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 2)
-
 (setq js-indent-level 2)
 (setq js2-basic-offset 2)
 (setq typescript-indent-level 2)
-
 (setq electric-indent-mode nil)
 
 ;; --------------------------------------------------
@@ -191,7 +207,7 @@
   (define-key helm-map (kbd "<escape>") 'helm-keyboard-quit))
 
 ;; --------------------------------------------------
-;; THEME
+;; THEME (premium dark)
 ;; --------------------------------------------------
 
 (use-package doom-themes
@@ -204,13 +220,15 @@
 ;; --------------------------------------------------
 
 (use-package doom-modeline
-  :init (doom-modeline-mode 1)
+  :init
+  (doom-modeline-mode 1)
   :custom
-  (doom-modeline-height 25)
+  (doom-modeline-height 28)
   (doom-modeline-bar-width 4)
   (doom-modeline-minor-modes nil)
   (doom-modeline-buffer-file-name-style 'truncate-with-project)
-  (doom-modeline-enable-word-count nil))
+  (doom-modeline-enable-word-count nil)
+  (doom-modeline-icon t))
 
 (use-package all-the-icons)
 
@@ -240,16 +258,3 @@
 
 (provide '.emacs)
 ;;; .emacs ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(git-gutter all-the-icons doom-modeline doom-themes treesit-auto which-key zig-mode yaml-mode web-mode vue-mode typescript-mode stylus-mode rjsx-mode restart-emacs prettier-js powerline-evil popup origami molokai-theme markdown-mode json-mode helm flycheck exec-path-from-shell dtrt-indent dockerfile-mode diminish coverlay auto-package-update add-node-modules-path)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
