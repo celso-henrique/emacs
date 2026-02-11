@@ -26,7 +26,20 @@
 (setq use-package-always-ensure t)
 
 ;; --------------------------------------------------
-;; macOS PATH (NODE / PRETTIER / ESLINT)
+;; PERFORMANCE
+;; --------------------------------------------------
+
+(setq gc-cons-threshold (* 50 1000 1000))
+(setq read-process-output-max (* 1024 1024))
+(setq inhibit-startup-screen t)
+
+;; Smooth scroll
+(setq scroll-conservatively 101)
+(setq scroll-margin 8)
+(setq scroll-step 1)
+
+;; --------------------------------------------------
+;; macOS PATH
 ;; --------------------------------------------------
 
 (use-package exec-path-from-shell
@@ -37,7 +50,7 @@
     (exec-path-from-shell-copy-env "NODE_PATH")))
 
 ;; --------------------------------------------------
-;; NODE_MODULES/.BIN NO PATH (FORMA CORRETA)
+;; NODE_MODULES/.BIN
 ;; --------------------------------------------------
 
 (use-package add-node-modules-path
@@ -52,29 +65,53 @@
 
 (use-package evil
   :init
-  ;; Usa o undo-redo nativo do Emacs (recomendado)
   (setq evil-undo-system 'undo-redo)
   :config
   (evil-mode 1))
 
-;; ESC sempre cancela tudo
 (global-set-key (kbd "<escape>") 'keyboard-quit)
+
+;; --------------------------------------------------
+;; LINE NUMBERS
+;; --------------------------------------------------
+
+(global-display-line-numbers-mode t)
+(setq display-line-numbers-type 'relative)
+
+(dolist (mode '(term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook
+                helm-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; --------------------------------------------------
+;; WHICH-KEY
+;; --------------------------------------------------
+
+(use-package which-key
+  :config
+  (which-key-mode 1))
+
+;; --------------------------------------------------
+;; TREE-SITTER (highlight moderno)
+;; --------------------------------------------------
+
+(use-package treesit-auto
+  :config
+  (global-treesit-auto-mode))
 
 ;; --------------------------------------------------
 ;; MODOS DE EDIÇÃO
 ;; --------------------------------------------------
 
-;; JS / JSX
 (use-package rjsx-mode
   :mode ("\\.js\\'" "\\.jsx\\'"))
 
-;; TypeScript (sem JSX)
 (use-package typescript-mode
   :mode ("\\.ts\\'")
   :config
   (setq typescript-indent-level 2))
 
-;; TSX → WEB-MODE (correto)
 (use-package web-mode
   :mode ("\\.tsx\\'")
   :config
@@ -87,31 +124,33 @@
         indent-tabs-mode nil))
 
 ;; --------------------------------------------------
-;; PRETTIER (LOCAL DO PROJETO)
+;; PRETTIER
 ;; --------------------------------------------------
 
 (use-package prettier-js
   :diminish prettier-js-mode
   :config
-  ;; NÃO força global — usa node_modules/.bin/prettier
   (setq prettier-js-command "prettier")
 
-  (add-hook 'rjsx-mode-hook #'prettier-js-mode)
-  (add-hook 'typescript-mode-hook #'prettier-js-mode)
-  (add-hook 'web-mode-hook #'prettier-js-mode)
+  (dolist (hook '(rjsx-mode-hook
+                  typescript-mode-hook
+                  web-mode-hook))
+    (add-hook hook #'prettier-js-mode))
 
-  ;; format on save
   (add-hook 'prettier-js-mode-hook
             (lambda ()
               (add-hook 'before-save-hook #'prettier-js nil t))))
 
 ;; --------------------------------------------------
-;; FLYCHECK + ESLINT LOCAL
+;; FLYCHECK + ESLINT
 ;; --------------------------------------------------
 
 (use-package flycheck
   :init
-  (global-flycheck-mode))
+  (global-flycheck-mode)
+  :config
+  (setq flycheck-indication-mode 'right-fringe)
+  (setq flycheck-idle-change-delay 0.5))
 
 (defun my/use-eslint-from-node-modules ()
   (let* ((root (locate-dominating-file
@@ -126,18 +165,7 @@
 (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
 
 ;; --------------------------------------------------
-;; DESABILITAR COISAS QUE QUEBRAM INDENTAÇÃO
-;; --------------------------------------------------
-
-(use-package dtrt-indent
-  :config
-  (add-hook 'typescript-mode-hook (lambda () (dtrt-indent-mode -1)))
-  (add-hook 'web-mode-hook (lambda () (dtrt-indent-mode -1))))
-
-(setq electric-indent-mode nil)
-
-;; --------------------------------------------------
-;; INDENTAÇÃO GLOBAL
+;; INDENTAÇÃO
 ;; --------------------------------------------------
 
 (setq-default indent-tabs-mode nil)
@@ -146,6 +174,8 @@
 (setq js-indent-level 2)
 (setq js2-basic-offset 2)
 (setq typescript-indent-level 2)
+
+(setq electric-indent-mode nil)
 
 ;; --------------------------------------------------
 ;; HELM
@@ -157,19 +187,52 @@
   (global-set-key (kbd "M-x") 'helm-M-x)
   (global-set-key (kbd "C-x C-f") 'helm-find-files))
 
-;; ESC fecha Helm SEMPRE
 (with-eval-after-load 'helm
   (define-key helm-map (kbd "<escape>") 'helm-keyboard-quit))
 
 ;; --------------------------------------------------
-;; UI
+;; THEME
 ;; --------------------------------------------------
 
-(use-package molokai-theme
+(use-package doom-themes
   :config
-  (load-theme 'molokai t))
+  (load-theme 'doom-tokyo-night t)
+  (doom-themes-org-config))
 
-(use-package restart-emacs)
+;; --------------------------------------------------
+;; DOOM MODELINE
+;; --------------------------------------------------
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-height 25)
+  (doom-modeline-bar-width 4)
+  (doom-modeline-minor-modes nil)
+  (doom-modeline-buffer-file-name-style 'truncate-with-project)
+  (doom-modeline-enable-word-count nil))
+
+(use-package all-the-icons)
+
+;; --------------------------------------------------
+;; GIT
+;; --------------------------------------------------
+
+(use-package git-gutter
+  :init
+  (global-git-gutter-mode +1))
+
+;; --------------------------------------------------
+;; QUALITY OF LIFE
+;; --------------------------------------------------
+
+(global-hl-line-mode 1)
+(save-place-mode 1)
+(savehist-mode 1)
+(column-number-mode 1)
+
+(setq backup-directory-alist `(("." . "~/.emacs-saves")))
+(setq auto-save-default nil)
 
 ;; --------------------------------------------------
 ;; FINAL
@@ -177,3 +240,16 @@
 
 (provide '.emacs)
 ;;; .emacs ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(git-gutter all-the-icons doom-modeline doom-themes treesit-auto which-key zig-mode yaml-mode web-mode vue-mode typescript-mode stylus-mode rjsx-mode restart-emacs prettier-js powerline-evil popup origami molokai-theme markdown-mode json-mode helm flycheck exec-path-from-shell dtrt-indent dockerfile-mode diminish coverlay auto-package-update add-node-modules-path)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
