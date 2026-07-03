@@ -1,16 +1,24 @@
 ;;; Celso Henrique .emacs file
 ;;; package --- Summary
 
-(require 'package)
-(package-initialize)
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/")) 
-(when (>= emacs-major-version 24)
-  (require 'package)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-  )
 (setq package-enable-at-startup nil)
+(require 'package)
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/"))
+(package-initialize)
+
+(defun my/package-archive-stale-p ()
+  "Return non-nil when package archive metadata should be refreshed."
+  (let* ((archive-file (expand-file-name "archives/melpa/archive-contents" package-user-dir))
+         (attrs (file-attributes archive-file 'string))
+         (mtime (and attrs (file-attribute-modification-time attrs))))
+    (or (null package-archive-contents)
+        (null mtime)
+        (time-less-p mtime (time-subtract (current-time) (days-to-time 7))))))
+
+(when (my/package-archive-stale-p)
+  (package-refresh-contents))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -20,10 +28,9 @@
    (quote
     ("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
  '(flycheck-javascript-flow-args nil)
- '(helm-ff-lynx-style-map t)
  '(package-selected-packages
    (quote
-    (auto-package-update markdown-mode flycheck-flow flow-minor-mode prettier-js restart-emacs stylus-mode nlinum powerline-evil telephone-line telephone-line-config smart-mode-line-powerline-theme smart-mode-line dtrt-indent flycheck exec-path-from-shell web-mode evil-indent-textobject evil-surround evil-jumper evil-leader use-package helm evil-visual-mark-mode neotree))))
+    (vterm magit consult marginalia orderless vertico lua-mode auto-package-update markdown-mode prettier-js restart-emacs yaml-mode dockerfile-mode less-css-mode flycheck exec-path-from-shell web-mode use-package evil json-mode vue-mode rjsx-mode js2-mode diminish molokai-theme))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -40,7 +47,6 @@
 
 ;; use-package
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
 (use-package diminish
@@ -51,11 +57,46 @@
 (require 'diminish)
 (require 'bind-key)
 
+;; save minibuffer history
+(savehist-mode 1)
+
 ;; evil mode
 (use-package evil
   :ensure t
   :config
   (evil-mode 1))
+
+;; modern completion UI
+(use-package vertico
+  :ensure t
+  :bind (:map vertico-map
+              ("<escape>" . keyboard-escape-quit))
+  :config
+  (vertico-mode 1))
+
+(use-package orderless
+  :ensure t
+  :config
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles basic partial-completion)))))
+
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode 1))
+
+(use-package consult
+  :ensure t
+  :bind (("C-s" . consult-line)
+         ("C-x b" . consult-buffer)
+         ("C-x C-f" . find-file)
+         ("M-y" . consult-yank-pop)
+         ("M-g g" . consult-goto-line)
+         ("M-g i" . consult-imenu)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-x" . execute-extended-command)))
 
 ;; webmode
 (use-package web-mode
@@ -83,11 +124,12 @@
 
 ;; for better jsx syntax-highlighting in web-mode
 ;; - courtesy of Patrick @halbtuerke
-(defadvice web-mode-highlight-part (around tweak-jsx activate)
+(defun my/web-mode-highlight-part-tweak-jsx (orig-fun &rest args)
   (if (equal web-mode-content-type "jsx")
-    (let ((web-mode-enable-part-face nil))
-      ad-do-it)
-    ad-do-it))
+      (let ((web-mode-enable-part-face nil))
+        (apply orig-fun args))
+    (apply orig-fun args)))
+(advice-add 'web-mode-highlight-part :around #'my/web-mode-highlight-part-tweak-jsx)
 
 ;; exec-path for macos
 (use-package exec-path-from-shell
@@ -95,12 +137,6 @@
   :config
   (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize)))
-
-;; js2
-(use-package js2-mode
-  :ensure t
-  :config)
-(setq js2-strict-missing-semi-warning nil)
 
 ;; prettier
 (use-package prettier-js
@@ -119,33 +155,17 @@
   :config
   (global-flycheck-mode))
 
-;; disable jshint since we prefer eslint checking
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-  '(javascript-jshint)))
-
-;; disable check for html files
-(setq-default flycheck-disabled-checkers '(html-tidy))
-
 ;; use eslint with web-mode for jsx files
 (flycheck-add-mode 'javascript-eslint 'rjsx-mode)
 (flycheck-add-mode 'javascript-eslint 'web-mode)
 
-;; customize flycheck temp file prefix
-(setq-default flycheck-temp-prefix ".flycheck")
-
-;; disable json-jsonlist checking for json files
+;; disable noisy or redundant checkers that we do not use
 (setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(json-jsonlist)))
+              (append flycheck-disabled-checkers
+                      '(javascript-jshint html-tidy json-jsonlist)))
 
 ;; customize flycheck temp file prefix
 (setq-default flycheck-temp-prefix ".flycheck")
-
-;; disable json-jsonlist checking for json files
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(json-jsonlist)))
 
 ;; use local eslint from node_modules before global
 ;; http://emacs.stackexchange.com/questions/21205/flycheck-with-file-relative-eslint-executable
@@ -164,14 +184,15 @@
 (use-package json-mode :ensure t
   :config)
 
-;; stylus-mode
-(use-package stylus-mode 
-  :ensure t
-  :config)
-
 ;; yaml-mode
 (use-package yaml-mode 
   :ensure t
+  :config)
+
+;; lua-mode
+(use-package lua-mode
+  :ensure t
+  :mode ("\\.lua\\'" . lua-mode)
   :config)
 
 ;; dockerfile-mode
@@ -188,38 +209,51 @@
 (setq-default indent-tabs-mode nil
   tab-stop-list ()
   tab-width 2)
-(setq-default js2-basic-offset 2)
-
-;; powerline
-(use-package powerline
-  :ensure t
-  :config
-  (use-package powerline-evil
-    :ensure t
-    :config
-    (powerline-default-theme)
-    ))
-
-;; helm
-(use-package helm
-  :ensure t
-  :config
-  (helm-mode 1)
-  (global-set-key (kbd "M-x") 'helm-M-x)
-  (global-set-key (kbd "C-x C-f") 'helm-find-files)
-  (global-set-key (kbd "C-c h g") 'helm-google-suggest))
-
-(customize-set-variable 'helm-ff-lynx-style-map t)
 
 ;; escape quits
 (bind-key "<escape>" 'isearch-cancel isearch-mode-map)
-(bind-key "<escape>" 'helm-keyboard-quit helm-map)
-(bind-key "<escape>" 'helm-keyboard-quit helm-comp-read-map)
+(bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-map)
+(bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-ns-map)
+(bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-completion-map)
+(bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-must-match-map)
+(bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-isearch-map)
 
 ;; restart emacs
 (use-package restart-emacs
   :ensure t
   :config)
+
+;; magit
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)))
+
+;; terminal
+(use-package vterm
+  :ensure t
+  :commands vterm)
+
+(defun my/project-root ()
+  (if-let ((project (project-current)))
+      (project-root project)
+    default-directory))
+
+(defun my/agent-terminal (buffer-name command)
+  (let ((default-directory (my/project-root)))
+    (vterm buffer-name)
+    (vterm-send-string command)
+    (vterm-send-return)))
+
+(defun my/codex ()
+  (interactive)
+  (my/agent-terminal "*codex*" "codex"))
+
+(defun my/claude ()
+  (interactive)
+  (my/agent-terminal "*claude*" "claude"))
+
+(global-set-key (kbd "C-c a c") #'my/codex)
+(global-set-key (kbd "C-c a l") #'my/claude)
 
 ;; vue
 (use-package vue-mode
@@ -235,9 +269,11 @@
   :config
   (load-theme 'molokai t))
 
-;; linum
-(global-linum-mode t)
-(setq linum-format "%d")
+;; line numbers
+(if (fboundp 'global-display-line-numbers-mode)
+    (global-display-line-numbers-mode t)
+  (global-linum-mode t)
+  (setq linum-format "%d"))
 
 ;; markdown-mode
 (use-package markdown-mode
