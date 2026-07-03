@@ -30,7 +30,7 @@
  '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
    (quote
-    (vterm magit consult marginalia orderless vertico lua-mode auto-package-update markdown-mode prettier-js restart-emacs yaml-mode dockerfile-mode less-css-mode flycheck exec-path-from-shell web-mode use-package evil json-mode vue-mode rjsx-mode js2-mode diminish molokai-theme))))
+    (eglot treesit-auto vterm magit consult marginalia orderless vertico lua-mode auto-package-update markdown-mode prettier-js restart-emacs yaml-mode dockerfile-mode less-css-mode flycheck exec-path-from-shell web-mode use-package evil json-mode vue-mode diminish molokai-theme))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -98,6 +98,45 @@
          ("M-s l" . consult-line)
          ("M-x" . execute-extended-command)))
 
+;; modern JS/TS stack
+(use-package treesit-auto
+  :ensure t
+  :config
+  (setq treesit-auto-install 'prompt)
+  (global-treesit-auto-mode))
+
+(use-package eglot
+  :ensure t
+  :hook ((js-ts-mode . eglot-ensure)
+         (typescript-ts-mode . eglot-ensure)
+         (tsx-ts-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               '((js-ts-mode typescript-ts-mode tsx-ts-mode)
+                 "typescript-language-server" "--stdio")))
+
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.mjs\\'" . js-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.cjs\\'" . js-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . tsx-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+
+(defun my/setup-modern-js-buffer ()
+  "Shared setup for modern JavaScript, TypeScript, and TSX buffers."
+  (setq-local tab-width 2)
+  (setq-local indent-tabs-mode nil)
+  (prettier-js-mode 1))
+
+(defun my/eglot-format-buffer-on-save ()
+  "Format buffer on save when managed by Eglot."
+  (add-hook 'before-save-hook #'eglot-format-buffer nil t))
+
+(add-hook 'js-ts-mode-hook #'my/setup-modern-js-buffer)
+(add-hook 'typescript-ts-mode-hook #'my/setup-modern-js-buffer)
+(add-hook 'tsx-ts-mode-hook #'my/setup-modern-js-buffer)
+(add-hook 'eglot-managed-mode-hook #'my/eglot-format-buffer-on-save)
+
 ;; webmode
 (use-package web-mode
   :ensure t
@@ -109,12 +148,6 @@
 (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
-
-;; rxjs mode
-(use-package rjsx-mode
-  :ensure t
-  :config)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . rjsx-mode))
 
 (defun my-web-mode-hook ()
   "Hooks for Web mode."
@@ -146,8 +179,7 @@
     "--trailing-comma" "none"
     "--bracket-spacing" "true"
     "--single-quote"
-  ))
-  (add-hook 'rjsx-mode-hook 'prettier-js-mode))
+  )))
 
 ;; flycheck
 (use-package flycheck
@@ -156,7 +188,6 @@
   (global-flycheck-mode))
 
 ;; use eslint with web-mode for jsx files
-(flycheck-add-mode 'javascript-eslint 'rjsx-mode)
 (flycheck-add-mode 'javascript-eslint 'web-mode)
 
 ;; disable noisy or redundant checkers that we do not use
