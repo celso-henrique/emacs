@@ -5,8 +5,8 @@ My personal `.emacs` file.
 ## Current setup
 
 This config is centered around a lightweight Evil-based editing workflow with
-modern minibuffer completion, project search, Git integration, and terminal AI
-helpers.
+modern minibuffer completion, project search, Git integration, terminal AI
+helpers, and a modern Tree-sitter + Eglot JavaScript / TypeScript / React setup.
 
 ### Core packages
 
@@ -17,10 +17,13 @@ helpers.
 - `consult`: buffer switching, search, line jump, imenu, and ripgrep helpers
 - `magit`: Git interface inside Emacs
 - `vterm`: full terminal inside Emacs
+- `eglot`: LSP client for IDE features
+- `treesit-auto`: auto-switch to Tree-sitter major modes when available
+- `doom-modeline`: richer, more polished mode line
+- `nerd-icons`: icon set used by the visual UI
 - `flycheck`: on-the-fly diagnostics
 - `web-mode`: HTML/templates/web editing
-- `rjsx-mode`: JavaScript / JSX editing
-- `prettier-js`: formatting for JSX buffers
+- `prettier-js`: formatting for JS / TS / React buffers
 - `lua-mode`: `.lua` syntax support
 - `json-mode`, `yaml-mode`, `dockerfile-mode`, `less-css-mode`, `vue-mode`,
   `markdown-mode`: language/filetype support
@@ -54,7 +57,13 @@ helpers.
 
 ## Notes
 
-- The config currently keeps `rjsx-mode` / `js2-mode` for JavaScript and JSX.
+- With Emacs `30.2`, the JS / TS / React stack uses native Tree-sitter modes:
+  `js-ts-mode`, `typescript-ts-mode`, and `tsx-ts-mode`.
+- `eglot` automatically starts for JS / TS / TSX buffers using
+  `typescript-language-server`.
+- The visual direction is a "Developer Cozy" dark setup using
+  `modus-vivendi-tinted`, `doom-modeline`, `nerd-icons`, current-line
+  highlighting, and cleaner frame chrome.
 - `helm`, `powerline`, and old unused packages were removed from the active
   setup.
 - The package bootstrap refreshes package archives automatically when cache

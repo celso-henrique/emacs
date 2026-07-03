@@ -30,14 +30,13 @@
  '(flycheck-javascript-flow-args nil)
  '(package-selected-packages
    (quote
-    (eglot treesit-auto vterm magit consult marginalia orderless vertico lua-mode auto-package-update markdown-mode prettier-js restart-emacs yaml-mode dockerfile-mode less-css-mode flycheck exec-path-from-shell web-mode use-package evil json-mode vue-mode diminish molokai-theme))))
+    (helm doom-modeline nerd-icons eglot treesit-auto vterm magit consult marginalia orderless vertico lua-mode auto-package-update markdown-mode prettier-js restart-emacs yaml-mode dockerfile-mode less-css-mode flycheck exec-path-from-shell web-mode use-package evil json-mode vue-mode diminish))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(mode-line ((t (:foreground "#f0f0f0" :background "#666666" :box nil))))
- '(mode-line-inactive ((t (:foreground "#999999" :background "#666666" :box nil)))))
+ )
 
 ;; backup directory
 (setq backup-directory-alist
@@ -60,11 +59,54 @@
 ;; save minibuffer history
 (savehist-mode 1)
 
+;; cozy UI defaults
+(setq inhibit-startup-screen t
+      ring-bell-function 'ignore
+      visible-bell nil
+      use-dialog-box nil
+      frame-title-format '("%b  |  emacs")
+      initial-scratch-message nil)
+
+(menu-bar-mode 1)
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
+(when (fboundp 'blink-cursor-mode)
+  (blink-cursor-mode -1))
+(when (fboundp 'pixel-scroll-precision-mode)
+  (pixel-scroll-precision-mode 1))
+(global-hl-line-mode 1)
+(column-number-mode 1)
+(display-time-mode 1)
+(show-paren-mode 1)
+
 ;; evil mode
 (use-package evil
   :ensure t
   :config
   (evil-mode 1))
+
+;; dired with explicit evil-friendly file operations
+(use-package dired
+  :ensure nil
+  :config
+  (setq dired-kill-when-opening-new-dired-buffer t
+        dired-dwim-target t))
+
+(with-eval-after-load 'dired
+  (evil-set-initial-state 'dired-mode 'normal)
+  (evil-define-key 'normal dired-mode-map
+    (kbd "d") #'dired-flag-file-deletion
+    (kbd "x") #'dired-do-flagged-delete
+    (kbd "R") #'dired-do-rename
+    (kbd "C") #'dired-do-copy
+    (kbd "h") #'dired-up-directory
+    (kbd "l") #'dired-find-file
+    (kbd "RET") #'dired-find-file
+    (kbd "^") #'dired-up-directory
+    (kbd "+") #'dired-create-directory
+    (kbd "g") #'revert-buffer))
 
 ;; modern completion UI
 (use-package vertico
@@ -72,7 +114,11 @@
   :bind (:map vertico-map
               ("<escape>" . keyboard-escape-quit))
   :config
+  (setq vertico-cycle t)
   (vertico-mode 1))
+
+(require 'vertico-directory)
+(add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
 
 (use-package orderless
   :ensure t
@@ -86,17 +132,40 @@
   :config
   (marginalia-mode 1))
 
+;; icons and modeline
+(use-package nerd-icons
+  :ensure t)
+
+(use-package doom-modeline
+  :ensure t
+  :init
+  (setq doom-modeline-height 28
+        doom-modeline-bar-width 4
+        doom-modeline-buffer-file-name-style 'truncate-upto-project
+        doom-modeline-minor-modes nil
+        doom-modeline-time t
+        doom-modeline-icon t)
+  :config
+  (doom-modeline-mode 1))
+
 (use-package consult
   :ensure t
   :bind (("C-s" . consult-line)
-         ("C-x b" . consult-buffer)
-         ("C-x C-f" . find-file)
+   	     ("C-x b" . consult-buffer)
          ("M-y" . consult-yank-pop)
          ("M-g g" . consult-goto-line)
          ("M-g i" . consult-imenu)
          ("M-s r" . consult-ripgrep)
          ("M-s l" . consult-line)
          ("M-x" . execute-extended-command)))
+
+(use-package helm
+  :ensure t
+  :bind (("C-x C-f" . helm-find-files))
+  :config
+  (setq helm-split-window-inside-p t
+        helm-move-to-line-cycle-in-source t
+        helm-ff-file-name-history-use-recentf t))
 
 ;; modern JS/TS stack
 (use-package treesit-auto
@@ -151,8 +220,9 @@
 
 (defun my-web-mode-hook ()
   "Hooks for Web mode."
-  (setq web-mode-markup-indent-offset 2)
-)
+  (setq web-mode-markup-indent-offset 2
+        web-mode-code-indent-offset 2
+        web-mode-css-indent-offset 2))
 (add-hook 'web-mode-hook  'my-web-mode-hook)
 
 ;; for better jsx syntax-highlighting in web-mode
@@ -243,6 +313,10 @@
 
 ;; escape quits
 (bind-key "<escape>" 'isearch-cancel isearch-mode-map)
+(with-eval-after-load 'helm
+  (bind-key "<escape>" 'helm-keyboard-quit helm-map)
+  (when (boundp 'helm-read-file-map)
+    (bind-key "<escape>" 'helm-keyboard-quit helm-read-file-map)))
 (bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-map)
 (bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-ns-map)
 (bind-key "<escape>" 'keyboard-escape-quit minibuffer-local-completion-map)
@@ -291,14 +365,26 @@
   :ensure t
   :config)
 
-;; molokai theme
-(use-package molokai-theme 
-  :ensure t
-  :load-path "themes"
-  :init
-  (setq molokai-theme-kit t)
-  :config
-  (load-theme 'molokai t))
+;; cozy dark theme
+(setq modus-themes-common-palette-overrides
+      '((bg-main "#1f1f28")
+        (bg-dim "#16161d")
+        (bg-alt "#2a2a37")
+        (bg-active "#343746")
+        (bg-inactive "#252733")
+        (fg-main "#dcd7ba")
+        (fg-dim "#b7b39a")
+        (fg-alt "#938056")
+        (accent-0 "#7e9cd8")
+        (accent-1 "#98bb6c")
+        (accent-2 "#e6c384")
+        (accent-3 "#d27e99")
+        (bg-region "#3b4252")
+        (bg-line-number-active "#2f334d")
+        (bg-line-number-inactive "#1a1b26")
+        (border-mode-line-active "#7e9cd8")
+        (border-mode-line-inactive "#2a2a37")))
+(load-theme 'modus-vivendi-tinted t)
 
 ;; line numbers
 (if (fboundp 'global-display-line-numbers-mode)
